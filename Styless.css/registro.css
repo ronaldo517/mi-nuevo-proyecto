@@ -1,0 +1,96 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #22BED5;
+}
+
+.container {
+    display: flex;
+    width: 800px;
+    background-color: #00A4FF;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+
+.image {
+    position: absolute;  
+    top: 0;              
+    left: 0;             
+    width: 250px;        
+    height: auto;        
+    margin: 10px;        
+}
+.right-section {
+    width: 400px;                 /* Ancho fijo en píxeles */
+    padding: 10px;
+    background-color: #00A4FF;
+    color: white;
+    text-align: center;
+    display: flex;               /* Usamos flexbox para centrar el contenido interno */
+    justify-content: center;      /* Centra el contenido horizontalmente */
+    align-items: center;          /* Centra el contenido verticalmente */
+    flex-direction: column;       /* Alinea los elementos en columna */
+    height: 80vh;                 /* Altura relativa a la ventana */
+    box-sizing: border-box;       /* Incluye el padding en el tamaño total */
+    margin: 0 auto;               /* Centra horizontalmente la sección en la página */
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input {
+    margin-bottom: 15px;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #D3D3D3;
+}
+
+form button {
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #004481;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+form button:hover {
+    background-color: #003366;
+}
+
+p {
+    margin-top: 10px;
+    color: white;
+}
+
+a {
+    color: white;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+a:hover {
+    color: #D3D3D3;
+}

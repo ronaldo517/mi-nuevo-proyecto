@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deezer Search</title>
+    <link rel="stylesheet" href="fotos.css/index.css">
+</head>
+<body>
+    <h1>Buscar canciones en Deezer</h1>
+
+    <input type="text" id="search-input" placeholder="Buscar artista o canción">
+    <button id="search-btn">Buscar</button>
+
+    <h2>Resultados de búsqueda:</h2>
+    <ul id="results-list"></ul> <!-- Aquí se mostrarán los resultados -->
+
+    <h2>Buscar por género</h2>
+    <input type="text" id="genre-input" placeholder="ID del género">
+    <button id="genre-btn">Buscar Género</button>
+
+    <h2>Detalles del género:</h2>
+    <div id="genre-details"></div> <!-- Aquí se mostrarán los detalles del género -->
+
+    <script>
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-input').value || 'eminem'; // Toma el valor del input o usa "eminem"
+            
+            fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`)   // Ruta y query a buscar
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();  // Espera recibir un JSON del servidor
+                })
+                .then(data => {
+                    const resultsList = document.getElementById('results-list');
+                    resultsList.innerHTML = '';  // Limpiar resultados previos
+
+                    data.data.forEach(track => {
+                        const li = document.createElement('li');
+                        li.textContent = `${track.title} - ${track.artist.name}`;
+                        resultsList.appendChild(li);  // Añadir cada canción a la lista
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        });
+
+        document.getElementById('genre-btn').addEventListener('click', () => {
+            const genreId = document.getElementById('genre-input').value; // Toma el ID del género del input
+            
+            fetch(`http://localhost:3000/genre/${encodeURIComponent(genreId)}`)   // Ruta y ID del género
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();  // Espera recibir un JSON del servidor
+                })
+                .then(data => {
+                    const genreDetails = document.getElementById('genre-details');
+                    genreDetails.innerHTML = '';  // Limpiar detalles previos
+
+                    // Mostrar información del género
+                    const genreInfo = `
+                        <p><strong>Género:</strong> ${data.name}</p>
+                        <p><strong>Descripción:</strong> ${data.description || 'No disponible'}</p>
+                    `;
+                    genreDetails.innerHTML = genreInfo;
+                })
+                .catch(error => {
+                    console.error('Error fetching genre data:', error);
+                });
+        });
+    </script>
+</body>
+</html>
