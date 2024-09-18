@@ -15,7 +15,7 @@ body {
 
 .container {
     display: flex;
-    width: 800px;
+    width: 500px;
     background-color: #00A4FF;
     border-radius: 10px;
     overflow: hidden;
@@ -27,7 +27,7 @@ body {
     position: absolute;  
     top: 0;              
     left: 0;             
-    width: 250px;        
+    width: 300px;        
     height: auto;        
     margin: 10px;        
 }

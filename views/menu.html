@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deezer - Menú</title>
+    <link rel="stylesheet" href="../public/Styless.css/menu.css"> <!-- Asegúrate de que el nombre del archivo CSS sea correcto -->
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Deezer</h1>
+        </header>
+        <nav>
+            <ul>
+                <li><a href="album.html">Álbum</a></li>
+                <li><a href="artista.html">ARTISTA</a></li>
+                <li><a href="genero.html">Género</a></li>
+                <li><a href="playlist.html">Lista de reproducción</a></li>
+            </ul>
+        </nav>
+        <main>
+            <h1>Buscar canciones en Deezer</h1>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar artista o canción">
+                <button id="search-btn">Buscar</button>
+            </div>
+
+            <h2>Resultados de búsqueda:</h2>
+            <div id="results-list"></div> <!-- Contenedor para los resultados -->
+
+            <h2>Reproductor de Audio:</h2>
+            <div id="current-track-info">
+                <p id="track-title">Selecciona una canción para reproducir</p> <!-- Mostrar nombre de la canción -->
+            </div>
+            <audio id="audio-player" controls>
+                <source id="audio-source" src="" type="audio/mpeg">
+                Tu navegador no soporta el elemento de audio.
+            </audio>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-input').value || 'eminem'; // Toma el valor del input o usa "eminem"
+            
+            fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`)   // Ruta y query a buscar
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();  // Espera recibir un JSON del servidor
+                })
+                .then(data => {
+                    const resultsList = document.getElementById('results-list');
+                    resultsList.innerHTML = '';  // Limpiar resultados previos
+
+                    data.data.forEach(track => {
+                        const trackContainer = document.createElement('div');
+                        trackContainer.className = 'track-container'; // Clase para el contenedor de la pista
+
+                        const trackTitle = document.createElement('h3');
+                        trackTitle.textContent = `${track.title} - ${track.artist.name}`;
+
+                        const playButton = document.createElement('button');
+                        playButton.textContent = 'Reproducir';
+                        playButton.onclick = () => {
+                            document.getElementById('audio-source').src = track.preview; // Actualiza la fuente del audio
+                            document.getElementById('audio-player').load(); // Recarga el reproductor de audio
+                            document.getElementById('audio-player').play(); // Reproduce el audio
+                            document.getElementById('track-title').textContent = `${track.title} - ${track.artist.name}`; // Muestra el nombre de la canción
+                        };
+
+                        trackContainer.appendChild(trackTitle);
+                        trackContainer.appendChild(playButton);
+                        resultsList.appendChild(trackContainer);  // Añadir el contenedor al listado de resultados
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        });
+    </script>
+</body>
+</html>

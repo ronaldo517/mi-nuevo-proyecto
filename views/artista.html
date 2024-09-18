@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Deezer - Artista</title>
+    <link rel="stylesheet" href="../public/Styless.css/artista.css">
+</head>
+<body>
+    <div class="container">
+        <h1>API Deezer - Buscar Artista</h1>
+
+        <form id="artistForm">
+            <input type="number" id="artistId" placeholder="ID del artista" min="0" required>
+            <button type="submit">Obtener Artista</button>
+        </form>
+
+        <div id="artistResults" class="results"></div>
+    </div>
+
+    <script>
+        document.getElementById('artistForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const artistId = document.getElementById('artistId').value;
+            fetch(`http://localhost:3000/artist/${encodeURIComponent(artistId)}`)
+                .then(response => response.json())
+                .then(data => {
+                    let html = `
+                        <h2>Información del Artista:</h2>
+                        <div class="artist">
+                            <h3>${data.name}</h3>
+                            <img src="${data.picture_big}" alt="${data.name}">
+                            <p>${data.nb_album} álbumes</p>
+                            <p>${data.nb_fan} fans</p>
+                        </div>
+                    `;
+                    document.getElementById('artistResults').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('artistResults').innerHTML = 'Error al obtener la información del artista.';
+                });
+        });
+    </script>
+</body>
+</html>

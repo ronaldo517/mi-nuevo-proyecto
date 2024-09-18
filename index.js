@@ -8,6 +8,9 @@ const DEEZER_API_KEY = 'd9391bf815msh735c64ff4d70826p177f85jsn57913074c63a';
 // Middleware para habilitar CORS
 app.use(cors());
 
+// Middleware para parsear JSON
+app.use(express.json());
+
 // Ruta para buscar canciones
 app.get('/search', (req, res) => {
     const query = req.query.q || 'eminem';  // Parámetro de búsqueda
@@ -32,7 +35,12 @@ app.get('/search', (req, res) => {
 
         apiRes.on('end', () => {
             const body = Buffer.concat(chunks).toString();
-            res.json(JSON.parse(body));  // Enviar la respuesta al cliente
+            try {
+                res.json(JSON.parse(body));  // Enviar la respuesta al cliente
+            } catch (error) {
+                console.error('Error al parsear JSON:', error);
+                res.status(500).send('Error en la respuesta de Deezer');
+            }
         });
     });
 
@@ -44,78 +52,75 @@ app.get('/search', (req, res) => {
     apiReq.end();
 });
 
-// Ruta para obtener los detalles del país
-app.get('/country', (req, res) => {
-    const countryData = {
-        "country_iso": "US",
-        "country": "Estados Unidos",
-        "open": true,
-        "pop": "fr",
-        "upload_token": "19bcbd054d2213f914596146dba53b98",
-        "upload_token_lifetime": 14400,
-        "user_token": null,
-        "hosts": {
-            "stream": "http://e-cdn-proxy-{0}.deezer.com/mobile/1/",
-            "images": "http://cdn-images.dzcdn.net/images"
-        },
-        "ads": {
-            "audio": {
-                "default": {
-                    "start": 1,
-                    "interval": 3,
-                    "unit": "track"
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ID del álbum que deseas buscar
+const albumId = '302127'; // Cambia esto por el ID del álbum que quieres buscar
+
+const options = {
+    method: 'GET',
+    hostname: 'deezerdevs-deezer.p.rapidapi.com',
+    port: 443,
+    path: `/album/${albumId}`, // Ruta completa con el ID del álbum
+    headers: {
+        'x-rapidapi-key': 'd9391bf815msh735c64ff4d70826p177f85jsn57913074c63a',
+        'x-rapidapi-host': 'deezerdevs-deezer.p.rapidapi.com'
+    }
+};
+
+// Función para buscar álbumes
+const fetchAlbum = (albumName) => {
+    return new Promise((resolve, reject) => {
+        const options = {
+            method: 'GET',
+            hostname: 'api.deezer.com',
+            port: 443,
+            path: `/search/album?q=${encodeURIComponent(albumName)}`,
+        };
+
+        const req = https.request(options, (res) => {
+            const chunks = [];
+
+            res.on('data', (chunk) => {
+                chunks.push(chunk);
+            });
+
+            res.on('end', () => {
+                const body = Buffer.concat(chunks).toString();
+                try {
+                    const jsonResponse = JSON.parse(body);
+                    resolve(jsonResponse);
+                } catch (error) {
+                    reject(`Error parsing JSON: ${error.message}. Response: ${body}`);
                 }
-            },
-            "display": {
-                "interstitial": {
-                    "start": 900,
-                    "interval": 900,
-                    "unit": "sec"
-                }
-            }
-        },
-        "has_podcasts": true,
-        "offers": []
-    };
-
-    res.json(countryData);  // Respuesta en formato JSON
-});
-
-// Ruta para obtener información sobre un género
-app.get('/genre/:id', (req, res) => {
-    const genreId = req.params.id;  // Obtén el ID del género de los parámetros de la ruta
-
-    const options = {
-        method: 'GET',
-        hostname: 'deezerdevs-deezer.p.rapidapi.com',
-        port: 443,
-        path: `/genre/${encodeURIComponent(genreId)}`,  // Usa el ID del género en la ruta
-        headers: {
-            'x-rapidapi-key': DEEZER_API_KEY,
-            'x-rapidapi-host': 'deezerdevs-deezer.p.rapidapi.com'
-        }
-    };
-
-    const apiReq = https.request(options, (apiRes) => {
-        const chunks = [];
-
-        apiRes.on('data', (chunk) => {
-            chunks.push(chunk);
+            });
         });
 
-        apiRes.on('end', () => {
-            const body = Buffer.concat(chunks).toString();
-            res.json(JSON.parse(body));  // Enviar la respuesta al cliente
+        req.on('error', (e) => {
+            reject(`Problem with request: ${e.message}`);
         });
-    });
 
-    apiReq.on('error', (error) => {
-        console.error('Error al hacer la solicitud:', error);
-        res.status(500).send('Error al obtener la información del género');
+        req.end();
     });
+};
 
-    apiReq.end();
+// Ruta para buscar álbumes
+app.get('/search/album', async (req, res) => {
+    const albumName = req.query.name;
+    if (!albumName) {
+        return res.status(400).json({ error: 'Nombre del álbum es requerido.' });
+    }
+
+    try {
+        const albumData = await fetchAlbum(albumName);
+        console.log(albumData); // Para depuración
+        res.json(albumData);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al buscar el álbum.' });
+    }
 });
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Iniciar el servidor
 const PORT = process.env.PORT || 3000;

@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Géneros</title>
+    <link rel="stylesheet" href="..//public/Styless.css/genero.css">
+</head>
+<body>
+    <header>
+        <h1>Buscar Géneros Musicales</h1>
+    </header>
+    
+    <main>
+        <!-- Formulario de búsqueda -->
+        <form id="search-form">
+            <input type="text" id="search-input" placeholder="Buscar género..." />
+            <button type="submit">Buscar</button>
+        </form>
+        
+        <!-- Lista de géneros -->
+        <ul id="genre-list"></ul>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Tu Plataforma de Música. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // Función para obtener todos los géneros
+        async function fetchGenres() {
+            try {
+                const response = await fetch('http://localhost:3000/genres');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                console.log('Datos recibidos:', data); // Verifica la estructura de los datos
+                const genreList = document.getElementById('genre-list');
+
+                if (data && Array.isArray(data.data)) {
+                    genreList.innerHTML = data.data.map(genre => `
+                        <li>
+                            <img src="${genre.picture_small || 'default.jpg'}" alt="${genre.name || 'Género desconocido'}" />
+                            <a href="genre-detail.html?id=${genre.id}">${genre.name || 'Sin nombre'}</a>
+                        </li>
+                    `).join('');
+                } else {
+                    genreList.innerHTML = '<li>No se encontraron géneros.</li>';
+                }
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+                const genreList = document.getElementById('genre-list');
+                genreList.innerHTML = '<li>Error al cargar los géneros.</li>';
+            }
+        }
+
+        // Manejar la búsqueda de géneros
+        document.getElementById('search-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const query = document.getElementById('search-input').value;
+            try {
+                const response = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                console.log('Resultados de búsqueda:', data);
+
+                const genreList = document.getElementById('genre-list');
+                if (data && Array.isArray(data.data)) {
+                    genreList.innerHTML = data.data.map(genre => `
+                        <li>
+                            <img src="${genre.picture_small || 'default.jpg'}" alt="${genre.name || 'Género desconocido'}" />
+                            <a href="genre-detail.html?id=${genre.id}">${genre.name || 'Sin nombre'}</a>
+                        </li>
+                    `).join('');
+                } else {
+                    genreList.innerHTML = '<li>No se encontraron resultados para la búsqueda.</li>';
+                }
+            } catch (error) {
+                console.error('Error searching genres:', error);
+                const genreList = document.getElementById('genre-list');
+                genreList.innerHTML = '<li>Error al buscar géneros.</li>';
+            }
+        });
+
+        // Cargar géneros al cargar la página
+        document.addEventListener('DOMContentLoaded', fetchGenres);
+    </script>
+</body>
+</html>

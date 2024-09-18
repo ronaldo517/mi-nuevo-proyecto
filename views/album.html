@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Álbum</title>
+    <link rel="stylesheet" href="../public/Styless.css/album.css"> <!-- Verifica esta ruta -->
+</head>
+<body>
+    <div class="container">
+        <h1>Buscar Álbum</h1>
+        
+        <form id="albumForm">
+            <input type="text" id="albumName" placeholder="Nombre del álbum" required>
+            <button type="submit">Buscar Álbum</button>
+        </form>
+
+        <div id="albumResults" class="album-container"></div> <!-- Contenedor de álbumes -->
+        <div id="trackResults" class="track-container"></div> <!-- Contenedor de canciones -->
+    </div>
+
+    <script>
+        document.getElementById('albumForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const albumName = document.getElementById('albumName').value;
+            console.log('Buscando álbum:', albumName);
+
+            fetch(`http://localhost:3000/search/album?name=${encodeURIComponent(albumName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+
+                    if (data.error) {
+                        document.getElementById('albumResults').innerHTML = `<p>${data.error}</p>`;
+                        return;
+                    }
+
+                    if (data && data.data && data.data.length > 0) {
+                        const albums = data.data.slice(0, 10);
+                        let html = '';
+
+                        albums.forEach(album => {
+                            const artist = album.artist.name;
+                            const previewUrl = album.preview;
+
+                            html += `
+                                <div class="album-card" data-album-id="${album.id}">
+                                    <h3>${album.title}</h3>
+                                    <img src="${album.cover_big}" alt="${album.title}">
+                                    <p><strong>Artista:</strong> ${artist}</p>
+                                    <p><strong>Fecha de Lanzamiento:</strong> ${album.release_date || 'No disponible'}</p>
+                                    <p><strong>Número de Canciones:</strong> ${album.nb_tracks}</p>
+                                    <p><strong>Duración:</strong> ${album.duration ? album.duration + ' segundos' : 'No disponible'}</p>
+                                    ${previewUrl ? `<audio controls><source src="${previewUrl}" type="audio/mpeg">Tu navegador no soporta el elemento de audio.</audio>` : ''}
+                                    <a href="${album.link}" target="_blank">Ver en Deezer</a>
+                                </div>
+                            `;
+                        });
+
+                        document.getElementById('albumResults').innerHTML = html;
+
+                        // Añadir evento de clic a cada álbum
+                        document.querySelectorAll('.album-card').forEach(card => {
+                            card.addEventListener('click', function() {
+                                const albumId = this.getAttribute('data-album-id');
+                                console.log('Álbum seleccionado:', albumId);
+                                getAlbumTracks(albumId);
+                            });
+                        });
+
+                    } else {
+                        document.getElementById('albumResults').innerHTML = '<p>No se encontraron álbumes.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('albumResults').innerHTML = 'Error al obtener la información del álbum.';
+                });
+        });
+
+        function getAlbumTracks(albumId) {
+            fetch(`http://localhost:3000/search/album/${albumId}/tracks`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Datos de canciones:', data);
+
+                    if (data.error) {
+                        document.getElementById('trackResults').innerHTML = `<p>${data.error}</p>`;
+                        return;
+                    }
+
+                    if (data && data.data && data.data.length > 0) {
+                        const tracks = data.data;
+                        let html = '<h2>Lista de Canciones:</h2><ul>';
+
+                        tracks.forEach(track => {
+                            html += `
+                                <li>
+                                    <strong>${track.title}</strong> (${track.duration} segundos)
+                                    ${track.preview ? `<audio controls><source src="${track.preview}" type="audio/mpeg">Tu navegador no soporta el elemento de audio.</audio>` : ''}
+                                </li>
+                            `;
+                        });
+
+                        html += '</ul>';
+                        document.getElementById('trackResults').innerHTML = html;
+                    } else {
+                        document.getElementById('trackResults').innerHTML = '<p>No se encontraron canciones para este álbum.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('trackResults').innerHTML = 'Error al obtener la lista de canciones.';
+                });
+        }
+    </script>
+</body>
+</html>

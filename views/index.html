@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deezer Search</title>
-    <link rel="stylesheet" href="fotos.css/index.css">
+    <link rel="stylesheet" href="../public/Styless.css/index.css">
 </head>
 <body>
     <h1>Buscar canciones en Deezer</h1>
@@ -21,6 +21,12 @@
 
     <h2>Detalles del género:</h2>
     <div id="genre-details"></div> <!-- Aquí se mostrarán los detalles del género -->
+
+    <h2>Reproductor de Audio:</h2>
+    <audio id="audio-player" controls>
+        <source id="audio-source" src="" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
 
     <script>
         document.getElementById('search-btn').addEventListener('click', () => {
@@ -40,6 +46,15 @@
                     data.data.forEach(track => {
                         const li = document.createElement('li');
                         li.textContent = `${track.title} - ${track.artist.name}`;
+                        // Crear botón de reproducción
+                        const playButton = document.createElement('button');
+                        playButton.textContent = 'Reproducir';
+                        playButton.onclick = () => {
+                            document.getElementById('audio-source').src = track.preview; // Actualiza la fuente del audio
+                            document.getElementById('audio-player').load(); // Recarga el reproductor de audio
+                            document.getElementById('audio-player').play(); // Reproduce el audio
+                        };
+                        li.appendChild(playButton);
                         resultsList.appendChild(li);  // Añadir cada canción a la lista
                     });
                 })

@@ -1,0 +1,94 @@
+/* Estilos generales del cuerpo */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #007BFF; /* Fondo azul para el body */
+    color: #4c95d1; /* Color de texto blanco para mejor contraste */
+}
+
+/* Contenedor principal */
+.container {
+    width: 80%;
+    margin: 20px auto; /* Añadido margen superior para separación */
+    padding: 20px;
+    background-color: #ffffff; /* Fondo blanco para el contenedor */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos del encabezado */
+h1 {
+    text-align: center;
+    color: #007BFF; /* Color azul para el encabezado */
+}
+
+/* Estilos del formulario */
+form {
+    margin-bottom: 20px;
+}
+
+/* Estilos de los campos de entrada y botones */
+input[type="text"], button {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%; /* Ancho completo para los campos de entrada */
+    box-sizing: border-box; /* Incluye el padding en el ancho total */
+}
+
+/* Estilos del botón */
+button {
+    background-color: #007BFF; /* Color de fondo azul */
+    color: #fff; /* Color de texto blanco */
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3; /* Color de fondo azul oscuro en hover */
+}
+
+/* Estilos del contenedor de álbumes */
+.album-container {
+    display: flex;
+    flex-wrap: wrap; /* Permitir que los álbumes se muevan a la siguiente línea si es necesario */
+    gap: 10px; /* Espacio entre tarjetas de álbumes */
+    margin-top: 20px;
+}
+
+/* Estilos de cada álbum */
+.album-card {
+    flex: 1 0 calc(20% - 10px); /* Ancho fijo para cada tarjeta de álbum, permitiendo 5 por fila */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff; /* Fondo blanco para cada álbum */
+    border: 1px solid #ddd; /* Borde alrededor del álbum */
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+/* Estilos de la imagen del álbum */
+.album-card img {
+    max-width: 100%; /* Ancho máximo de la imagen en cada álbum */
+    height: auto;
+    border-radius: 4px; /* Bordes redondeados en la imagen */
+    margin-bottom: 10px;
+}
+
+/* Estilos de los textos en cada álbum */
+.album-card h3 {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #007BFF; /* Color azul para el título del álbum */
+}
+
+.album-card p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #333; /* Color de texto para los párrafos */
+}

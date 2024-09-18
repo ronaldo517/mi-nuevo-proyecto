@@ -1,0 +1,130 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #007BFF; /* Color de fondo azul */
+    color: white; /* Texto en blanco */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centrar contenido */
+    padding: 20px; /* Espaciado interno */
+}
+
+header {
+    background-color: #0056b3; /* Color más oscuro para el encabezado */
+    padding: 20px;
+    text-align: center;
+}
+
+nav {
+    background-color: #003f7f; /* Color de navegación */
+    width: 100%; /* Navegación a ancho completo */
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: center; /* Centrar los enlaces */
+}
+
+nav ul li {
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+main {
+    text-align: center; /* Centrar texto en el main */
+    margin-top: 20px; /* Espaciado superior */
+}
+
+.search-bar {
+    margin: 20px 0; /* Espaciado alrededor de la barra de búsqueda */
+}
+
+.search-bar input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 300px; /* Ajustar el ancho según sea necesario */
+}
+
+.search-bar button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #0056b3; /* Color del botón */
+    color: white;
+    cursor: pointer;
+}
+
+.search-bar button:hover {
+    background-color: #003f7f; /* Color al pasar el ratón */
+}
+
+h2 {
+    margin-top: 30px; /* Espaciado superior */
+    color: #FFD700; /* Color dorado para los títulos */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Sombra para mejorar la legibilidad */
+}
+
+#results-list {
+    display: flex;
+    flex-wrap: wrap; /* Permitir que los elementos se ajusten a la siguiente línea */
+    justify-content: center; /* Centrar los resultados */
+    padding: 0; /* Sin padding */
+}
+
+.track-container {
+    background-color: #0056b3; /* Fondo del cuadro de resultados */
+    border-radius: 5px;
+    padding: 20px;
+    margin: 10px; /* Espaciado entre cuadros */
+    width: 200px; /* Ancho fijo para cada cuadro */
+    text-align: center; /* Centrar texto dentro del cuadro */
+    transition: transform 0.2s; /* Efecto de transición */
+}
+
+.track-container:hover {
+    transform: scale(1.05); /* Aumentar tamaño al pasar el ratón */
+}
+
+.track-container h3 {
+    color: #FF69B4; /* Color rosa para el título de la pista */
+    margin: 10px 0; /* Espaciado superior e inferior */
+}
+
+.track-container button {
+    margin-top: 10px; /* Espacio entre el título y el botón */
+    background-color: #FFD700; /* Color del botón */
+    color: #003f7f; /* Color del texto del botón */
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.track-container button:hover {
+    background-color: #FFC300; /* Color al pasar el ratón */
+}
+
+.artist {
+    text-align: center;
+    margin: 20px; /* Espaciado entre artistas */
+}
+
+.artist img {
+    width: 100px; /* Ajusta el tamaño según sea necesario */
+    height: 100px; /* Ajusta el tamaño según sea necesario */
+    border-radius: 50%; /* Imagen circular */
+}
+
+audio {
+    margin-top: 20px; /* Espaciado superior para el reproductor de audio */
+}
