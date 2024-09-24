@@ -1,3 +1,4 @@
+/* Estilos para el cuerpo de la página */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -5,26 +6,36 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #00bcd4;
+    background-image: url('/img/inicioro.jpg'); /* Ruta de la imagen subida */
+    background-size: contain; /* Ajusta la imagen para que quepa en el fondo */
+    background-position: center; /* Centra la imagen */
+    background-repeat: no-repeat; /* Evita que la imagen se repita */
+    background-color: #000; /* Color de fondo oscuro para que combine con la imagen */
+    color: white; /* Texto blanco */
 }
 
+/* Contenedor principal */
 .container {
     display: flex;
-    background-color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semi-transparente */
     border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Sombra para dar efecto de elevación */
+    padding: 20px;
 }
 
+/* Contenedor del formulario */
 .form-container {
     padding: 20px;
     width: 300px;
 }
 
+/* Estilos del título */
 h1 {
     text-align: center;
-    color: #333;
+    color: #ffffff;
 }
 
+/* Estilos para los campos de entrada */
 input {
     width: 100%;
     padding: 10px;
@@ -33,6 +44,7 @@ input {
     border-radius: 5px;
 }
 
+/* Estilos para los botones */
 button {
     width: 100%;
     padding: 10px;
@@ -47,10 +59,12 @@ button:hover {
     background-color: #3700b3;
 }
 
+/* Estilos para el texto de párrafo */
 p {
     text-align: center;
 }
 
+/* Contenedor de la imagen */
 .image-container {
     display: flex;
     align-items: center;
@@ -58,6 +72,23 @@ p {
     padding: 20px;
 }
 
+/* Ajuste de la imagen */
 .image-container img {
     max-width: 200px;
+    border-radius: 5px;
+}
+
+
+
+ /* Animación para mover el fondo */
+ @keyframes moverFondo {
+    0% {
+        background-position: center 0;
+    }
+    50% {
+        background-position: center 50px;
+    }
+    100% {
+        background-position: center 0;
+    }
 }

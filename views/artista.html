@@ -3,43 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Deezer - Artista</title>
-    <link rel="stylesheet" href="../public/Styless.css/artista.css">
+    <title>RonalMusic - Artista-Genero</title>
+    <link rel="stylesheet" href="../public/Styless.css/menu.css">
+    <link rel="icon" href="../img/inicio.jpg">
 </head>
 <body>
     <div class="container">
-        <h1>API Deezer - Buscar Artista</h1>
+        <header>
+            <h1>RonalMusic-Artista-Genero</h1>
+        </header>
+        <nav>
+            <ul>
+                <li><a href="menu.html">Volver a la busqueda</a></li>
+                <li><a href="#" id="album-link">Álbum</a></li>
+                <li><a href="artista.html">Artista-Genero</a></li>
+                <!--<li><a href="genero.html">Género</a></li>-->
+                <li><a href="index.html">Playlist</a></li>
+            </ul>
+        </nav>
+        <main>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar artista o canción">
+            </div>
 
-        <form id="artistForm">
-            <input type="number" id="artistId" placeholder="ID del artista" min="0" required>
-            <button type="submit">Obtener Artista</button>
-        </form>
+            <h2>Resultados de búsqueda:</h2>
+            <div id="results-list"></div> 
 
-        <div id="artistResults" class="results"></div>
+            <h2>Reproductor de Audio:</h2>
+            <div id="current-track-info">
+                <p id="track-title">Selecciona una canción para reproducir</p> 
+            </div>
+            <audio id="audio-player" controls>
+                <source id="audio-source" src="" type="audio/mpeg">
+                Tu navegador no soporta el elemento de audio.
+            </audio>
+        </main>
     </div>
 
     <script>
-        document.getElementById('artistForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const artistId = document.getElementById('artistId').value;
-            fetch(`http://localhost:3000/artist/${encodeURIComponent(artistId)}`)
-                .then(response => response.json())
-                .then(data => {
-                    let html = `
-                        <h2>Información del Artista:</h2>
-                        <div class="artist">
-                            <h3>${data.name}</h3>
-                            <img src="${data.picture_big}" alt="${data.name}">
-                            <p>${data.nb_album} álbumes</p>
-                            <p>${data.nb_fan} fans</p>
-                        </div>
-                    `;
-                    document.getElementById('artistResults').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('artistResults').innerHTML = 'Error al obtener la información del artista.';
-                });
+        let debounceTimeout;
+
+        document.getElementById('album-link').addEventListener('click', function (event) {
+            const artistName = document.getElementById('search-input').value.trim();
+            if (artistName) {
+                window.location.href = `album.html?artistName=${encodeURIComponent(artistName)}`;
+            } else {
+                alert('Por favor, ingrese un nombre de artista primero.');
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('input', () => {
+            const query = document.getElementById('search-input').value.trim();
+            const resultsList = document.getElementById('results-list');
+
+            if (debounceTimeout) {
+                clearTimeout(debounceTimeout);
+            }
+
+            if (query) {
+                resultsList.innerHTML = '<p>Buscando canciones...</p>';
+
+                debounceTimeout = setTimeout(() => {
+                    // Buscar canciones
+                    fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            resultsList.innerHTML = '';
+
+                            if (data.data && data.data.length > 0) {
+                                const tracks = data.data.filter(item => item.type === 'track').slice(0, 5);
+
+                                tracks.forEach(item => {
+                                    const trackContainer = document.createElement('div');
+                                    trackContainer.className = 'track-container';
+
+                                    const artistImage = document.createElement('img');
+                                    artistImage.src = item.artist.picture_small; 
+                                    artistImage.alt = item.artist.name;
+                                    artistImage.className = 'artist-image';
+
+                                    const trackTitle = document.createElement('h3');
+                                    trackTitle.textContent = `${item.title} - ${item.artist.name}`;
+
+                                    const playButton = document.createElement('button');
+                                    playButton.textContent = 'Reproducir';
+                                    playButton.onclick = () => {
+                                        document.getElementById('audio-source').src = item.preview;
+                                        document.getElementById('audio-player').load();
+                                        document.getElementById('audio-player').play();
+                                        document.getElementById('track-title').textContent = `${item.title} - ${item.artist.name}`;
+                                    };
+
+                                    // Añadir ID y género del artista
+                                    const artistInfo = document.createElement('p');
+                                    artistInfo.innerHTML = `ID: ${item.artist.id}, Género: ${item.artist.genre ? item.artist.genre : 'No disponible'}`;
+                                    trackContainer.appendChild(artistInfo);
+
+                                    trackContainer.appendChild(artistImage);
+                                    trackContainer.appendChild(trackTitle);
+                                    trackContainer.appendChild(playButton);
+                                    resultsList.appendChild(trackContainer);
+                                });
+                            } else {
+                                resultsList.innerHTML = '<p>No se encontraron canciones.</p>';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching data:', error);
+                            resultsList.innerHTML = '<p>Error al buscar canciones. Inténtalo de nuevo.</p>';
+                        });
+                }, 300); 
+            } else {
+                resultsList.innerHTML = '';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const lastSearch = localStorage.getItem('lastSearch');
+            if (lastSearch) {
+                document.getElementById('search-input').value = lastSearch;
+                document.getElementById('search-input').dispatchEvent(new Event('input'));
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            const searchInput = document.getElementById('search-input').value;
+            localStorage.setItem('lastSearch', searchInput);
         });
     </script>
 </body>

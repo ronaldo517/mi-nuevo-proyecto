@@ -1,34 +1,47 @@
+/* Estilos generales del cuerpo */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    background-color: #007BFF;
+    color: #fff;
 }
 
-header {
-    background-color: #333;
-    color: white;
-    padding: 10px 0;
-    text-align: center;
-}
-
-main {
+/* Contenedor principal */
+.container {
+    width: 80%;
+    margin: 20px auto;
     padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: #333;
 }
 
+/* Estilos del encabezado */
+h1 {
+    text-align: center;
+    color: #007BFF;
+}
+
+/* Estilos del formulario */
 form {
     margin-bottom: 20px;
 }
 
-input[type="text"] {
+/* Estilos de los campos de entrada y botones */
+input[type="number"], button {
     padding: 10px;
-    font-size: 16px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 16px;
     background-color: #007BFF;
-    color: white;
+    color: #fff;
     border: none;
     cursor: pointer;
 }
@@ -37,16 +50,18 @@ button:hover {
     background-color: #0056b3;
 }
 
-ul {
-    list-style-type: none;
-    padding: 0;
+/* Estilos de los resultados */
+.results {
+    margin-top: 20px;
 }
 
-li {
+.genre {
+    text-align: center;
+}
+
+.genre img {
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
     margin-bottom: 10px;
-}
-
-img {
-    max-width: 50px;
-    margin-right: 10px;
 }

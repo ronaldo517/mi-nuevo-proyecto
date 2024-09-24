@@ -92,3 +92,28 @@ button:hover {
     font-size: 14px;
     color: #333; /* Color de texto para los párrafos */
 }
+
+/* boton para volver ala busqueda 
+*/
+button {
+    background-color: #007BFF; /* Color de fondo */
+    color: white; /* Color del texto */
+    border: none; /* Sin borde */
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 10px 15px; /* Espaciado interno */
+    cursor: pointer; /* Cambia el cursor al pasar el mouse */
+    font-size: 16px; /* Tamaño de fuente */
+    transition: background-color 0.3s; /* Transición suave */
+}
+
+button:hover {
+    background-color: #0056b3; /* Color de fondo al pasar el mouse */
+}
+
+.album-card button {
+    background-color: #28a745; /* Color de fondo para los botones de álbum */
+}
+
+.album-card button:hover {
+    background-color: #218838; /* Color al pasar el mouse para botones de álbum */
+}

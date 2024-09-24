@@ -3,115 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscar Álbum</title>
-    <link rel="stylesheet" href="../public/Styless.css/album.css"> <!-- Verifica esta ruta -->
+    <title>RonalMusic - Álbumes</title>
+    <link rel="stylesheet" href="../public/Styless.css/menu.css">
+    <link rel="icon" href="../img/inicio.jpg">
 </head>
 <body>
     <div class="container">
-        <h1>Buscar Álbum</h1>
-        
-        <form id="albumForm">
-            <input type="text" id="albumName" placeholder="Nombre del álbum" required>
-            <button type="submit">Buscar Álbum</button>
-        </form>
+        <header>
+            <h1>RonalMusic - Álbumes</h1>
+        </header>
+        <nav>
+            <ul>
+                <li><a href="menu.html">Volver a la busqueda</a></li>
+                <li><a href="album.html">Álbum</a></li>
+                <li><a href="artista.html">Artista-Genero</a></li>
+                <!--<li><a href="genero.html">Género</a></li>-->
+                <li><a href="index.html">Playlist</a></li>
+            </ul>
+        </nav>
+        <main>
+            
 
-        <div id="albumResults" class="album-container"></div> <!-- Contenedor de álbumes -->
-        <div id="trackResults" class="track-container"></div> <!-- Contenedor de canciones -->
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar álbum">
+            </div>
+
+            <h2>Resultados de búsqueda:</h2>
+            <div id="album-results"></div>
+
+            <h2>Canciones del álbum:</h2>
+            <div id="track-list"></div>
+
+            <h2>Reproductor de Audio:</h2>
+            <div id="current-track-info">
+                <p id="track-title">Selecciona una canción para reproducir</p>
+            </div>
+            <audio id="audio-player" controls>
+                <source id="audio-source" src="" type="audio/mpeg">
+                Tu navegador no soporta el elemento de audio.
+            </audio>
+        </main>
     </div>
 
     <script>
-        document.getElementById('albumForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const albumName = document.getElementById('albumName').value;
-            console.log('Buscando álbum:', albumName);
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const artistName = urlParams.get('artistName') || localStorage.getItem('lastSearch');
 
-            fetch(`http://localhost:3000/search/album?name=${encodeURIComponent(albumName)}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Datos recibidos:', data);
+            if (artistName) {
+                document.getElementById('search-input').value = artistName;
+                fetchAlbums(artistName);
+            }
 
-                    if (data.error) {
-                        document.getElementById('albumResults').innerHTML = `<p>${data.error}</p>`;
-                        return;
-                    }
+            // Función para buscar álbumes
+            function fetchAlbums(query) {
+                fetch(`http://localhost:3000/search/album?name=${encodeURIComponent(query)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const albumResults = document.getElementById('album-results');
+                        albumResults.innerHTML = '';
 
-                    if (data && data.data && data.data.length > 0) {
-                        const albums = data.data.slice(0, 10);
-                        let html = '';
+                        if (data.data && data.data.length > 0) {
+                            const albumsToShow = data.data.slice(0, 5);
+                            albumsToShow.forEach(album => {
+                                const albumCard = document.createElement('div');
+                                albumCard.className = 'album-card';
 
-                        albums.forEach(album => {
-                            const artist = album.artist.name;
-                            const previewUrl = album.preview;
-
-                            html += `
-                                <div class="album-card" data-album-id="${album.id}">
+                                albumCard.innerHTML = `
                                     <h3>${album.title}</h3>
                                     <img src="${album.cover_big}" alt="${album.title}">
-                                    <p><strong>Artista:</strong> ${artist}</p>
+                                    <p><strong>Artista:</strong> ${album.artist.name}</p>
                                     <p><strong>Fecha de Lanzamiento:</strong> ${album.release_date || 'No disponible'}</p>
                                     <p><strong>Número de Canciones:</strong> ${album.nb_tracks}</p>
-                                    <p><strong>Duración:</strong> ${album.duration ? album.duration + ' segundos' : 'No disponible'}</p>
-                                    ${previewUrl ? `<audio controls><source src="${previewUrl}" type="audio/mpeg">Tu navegador no soporta el elemento de audio.</audio>` : ''}
-                                    <a href="${album.link}" target="_blank">Ver en Deezer</a>
-                                </div>
-                            `;
-                        });
+                                    <button class="view-tracks" data-album-id="${album.id}">Ver Canciones</button>
+                                `;
 
-                        document.getElementById('albumResults').innerHTML = html;
-
-                        // Añadir evento de clic a cada álbum
-                        document.querySelectorAll('.album-card').forEach(card => {
-                            card.addEventListener('click', function() {
-                                const albumId = this.getAttribute('data-album-id');
-                                console.log('Álbum seleccionado:', albumId);
-                                getAlbumTracks(albumId);
+                                albumResults.appendChild(albumCard);
                             });
-                        });
 
-                    } else {
-                        document.getElementById('albumResults').innerHTML = '<p>No se encontraron álbumes.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('albumResults').innerHTML = 'Error al obtener la información del álbum.';
-                });
+                            document.querySelectorAll('.view-tracks').forEach(button => {
+                                button.addEventListener('click', function () {
+                                    const albumId = this.getAttribute('data-album-id');
+                                    fetchTracks(albumId);
+                                });
+                            });
+                        } else {
+                            albumResults.innerHTML = '<p>No se encontraron álbumes.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching albums:', error);
+                        document.getElementById('album-results').innerHTML = '<p>Error al buscar álbumes. Inténtalo de nuevo.</p>';
+                    });
+            }
+
+            // Función para buscar las canciones del álbum
+            function fetchTracks(albumId) {
+                fetch(`http://localhost:3000/album/${albumId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const trackList = document.getElementById('track-list');
+                        trackList.innerHTML = '';
+
+                        if (data.tracks && data.tracks.data.length > 0) {
+                            data.tracks.data.forEach(track => {
+                                const trackContainer = document.createElement('div');
+                                trackContainer.className = 'track-container';
+
+                                trackContainer.innerHTML = `
+                                    <p>${track.title}</p>
+                                    <button class="play-track" data-preview-url="${track.preview}">Reproducir</button>
+                                `;
+
+                                trackList.appendChild(trackContainer);
+                            });
+
+                            document.querySelectorAll('.play-track').forEach(button => {
+                                button.addEventListener('click', function () {
+                                    const previewUrl = this.getAttribute('data-preview-url');
+                                    playTrack(previewUrl);
+                                });
+                            });
+                        } else {
+                            trackList.innerHTML = '<p>No se encontraron canciones en este álbum.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching tracks:', error);
+                        document.getElementById('track-list').innerHTML = '<p>Error al buscar canciones. Inténtalo de nuevo.</p>';
+                    });
+            }
+
+            // Función para reproducir una canción
+            function playTrack(previewUrl) {
+                document.getElementById('audio-source').src = previewUrl;
+                document.getElementById('audio-player').load();
+                document.getElementById('audio-player').play();
+                document.getElementById('track-title').textContent = 'Reproduciendo...';
+            }
         });
 
-        function getAlbumTracks(albumId) {
-            fetch(`http://localhost:3000/search/album/${albumId}/tracks`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Datos de canciones:', data);
-
-                    if (data.error) {
-                        document.getElementById('trackResults').innerHTML = `<p>${data.error}</p>`;
-                        return;
-                    }
-
-                    if (data && data.data && data.data.length > 0) {
-                        const tracks = data.data;
-                        let html = '<h2>Lista de Canciones:</h2><ul>';
-
-                        tracks.forEach(track => {
-                            html += `
-                                <li>
-                                    <strong>${track.title}</strong> (${track.duration} segundos)
-                                    ${track.preview ? `<audio controls><source src="${track.preview}" type="audio/mpeg">Tu navegador no soporta el elemento de audio.</audio>` : ''}
-                                </li>
-                            `;
-                        });
-
-                        html += '</ul>';
-                        document.getElementById('trackResults').innerHTML = html;
-                    } else {
-                        document.getElementById('trackResults').innerHTML = '<p>No se encontraron canciones para este álbum.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('trackResults').innerHTML = 'Error al obtener la lista de canciones.';
-                });
+        function goToMenu() {
+            const searchInput = document.getElementById('search-input').value;
+            localStorage.setItem('lastSearch', searchInput);
+            window.location.href = 'menu.html';
         }
     </script>
 </body>
