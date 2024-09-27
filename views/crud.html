@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Música</title>
+    <link rel="stylesheet" href="../public/Styless.css/crud.css"> <!-- Asegúrate de tener este archivo CSS -->
+</head>
+<body>
+    <div class="container">
+        <h1>CRUD de Música</h1>
+        
+        <div class="button-container">
+            <button id="searchButton">Buscar Música</button>
+            <button id="exitButton">Salir</button>
+            <li><a href="menu.html">Volver a la búsqueda</a></li>
+        </div>
+
+        <input type="text" id="searchInput" placeholder="Introduce el nombre de la música a buscar...">
+        <button id="executeSearchButton">Buscar</button>
+
+        <table id="resultsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Artista</th>
+                    <th>Género</th>
+                    <th>Año</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+
+        <div id="formContainer" class="form-container" style="display: none;">
+            <form id="crudForm">
+                <input type="hidden" id="musicId">
+                <label for="artist">Nuevo Artista:</label>
+                <input type="text" id="artist" required>
+
+                <label for="genre">Nuevo Género:</label>
+                <input type="text" id="genre" required>
+
+                <label for="year">Nuevo Año:</label>
+                <input type="date" id="year" required>
+
+                <button type="submit">Guardar Cambios</button>
+            </form>
+        </div>
+
+        <div id="message"></div> <!-- Para mostrar mensajes al usuario -->
+    </div>
+
+    <script>
+        document.getElementById('executeSearchButton').onclick = function() {
+            const name = document.getElementById('searchInput').value.trim();
+            if (name) {
+                fetch(`http://localhost:3000/api/music?name=${encodeURIComponent(name)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al buscar el registro.');
+                    return response.json();
+                })
+                .then(data => {
+                    const resultsBody = document.getElementById('resultsBody');
+                    resultsBody.innerHTML = ''; // Limpiar resultados anteriores
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.id}</td>
+                            <td>${item.artist}</td>
+                            <td>${item.genre}</td>
+                            <td>${item.year}</td>
+                            <td>
+                                <button class="editButton" data-id="${item.id}">Editar</button>
+                            </td>
+                        `;
+                        resultsBody.appendChild(row);
+                    });
+                    document.getElementById('resultsTable').style.display = 'table';
+                })
+                .catch(error => {
+                    document.getElementById('message').textContent = error.message;
+                });
+            } else {
+                alert('Por favor, ingresa el nombre de la música que deseas buscar.');
+            }
+        };
+
+        document.getElementById('resultsBody').addEventListener('click', function(e) {
+            if (e.target.classList.contains('editButton')) {
+                const id = e.target.dataset.id;
+                // Buscar el registro a modificar por ID
+                fetch(`http://localhost:3000/api/music/${id}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al buscar el registro.');
+                    return response.json();
+                })
+                .then(data => {
+                    // Rellena el formulario con los datos del registro a modificar
+                    document.getElementById('musicId').value = data.id;
+                    document.getElementById('artist').value = data.artist;
+                    document.getElementById('genre').value = data.genre;
+                    document.getElementById('year').value = data.year;
+                    document.getElementById('formContainer').style.display = 'block';
+                })
+                .catch(error => {
+                    document.getElementById('message').textContent = error.message;
+                });
+            }
+        });
+
+        document.getElementById('crudForm').onsubmit = function(event) {
+            event.preventDefault();
+            const id = document.getElementById('musicId').value;
+            const artist = document.getElementById('artist').value;
+            const genre = document.getElementById('genre').value;
+            const year = document.getElementById('year').value;
+
+            // Lógica para guardar el registro modificado
+            fetch(`http://localhost:3000/api/music/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ artist, genre, year }),
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error al guardar los cambios.');
+                document.getElementById('message').textContent = 'Registro modificado con éxito.';
+                document.getElementById('formContainer').style.display = 'none';
+                document.getElementById('resultsTable').style.display = 'none'; // Ocultar la tabla después de la modificación
+            })
+            .catch(error => {
+                document.getElementById('message').textContent = error.message;
+            });
+        };
+
+        document.getElementById('exitButton').onclick = function() {
+            window.location.href = 'index.html'; // Redirigir a la página principal
+        };
+    </script>
+</body>
+</html>

@@ -1,6 +1,15 @@
 import express from 'express';
 import https from 'https';
 import cors from 'cors';
+import sequelize from './db.js';  // Asegúrate de incluir la extensión .js
+import Album from './models/album.js';
+import Buscar from './models/buscar.js';
+import Playlis from './models/playlis.js';
+import Artista from './models/artista.js';  // Asegúrate de que el archivo existe
+import Genero from './models/genero.js';    // Asegúrate de que el archivo existe
+import registro from './models/registro.js';    // Asegúrate de que el archivo existe
+import Iniciar from './models/iniciar.js';    // Asegúrate de que el archivo existe
+import bcrypt from 'bcrypt';
 
 const app = express();
 const DEEZER_API_KEY = 'd9391bf815msh735c64ff4d70826p177f85jsn57913074c63a';
@@ -10,6 +19,44 @@ app.use(cors());
 
 // Middleware para parsear JSON
 app.use(express.json());
+
+// Endpoint para registro
+app.post('/registro', async (req, res) => {
+    const { nombre1, nombre2, apellido1, apellido2, correo, contraseña } = req.body;
+
+    try {
+        
+    
+// Aquí puedes hacer la lógica para guardar el registro en la base de datos
+        
+  
+// Por ejemplo, guardando en una tabla de usuarios (asegúrate de tenerla creada)
+        
+       
+// await Usuario.create({ nombre1, nombre2, apellido1, apellido2, correo, contraseña });
+
+        // Respuesta exitosa
+        res.status(201).send('Usuario registrado con éxito');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al registrar el usuario');
+    }
+});
+
+// Sincronizar modelos con la base de datos
+sequelize.authenticate()
+    .then(() => {
+        console.log('Conexión a la base de datos establecida con éxito.');
+
+        // Sincronizar los modelos con la base de datos
+        return sequelize.sync({ force: false });  // Cambia a 'true' si quieres que sobrescriba las tablas
+    })
+    .then(() => {
+        console.log('Modelos sincronizados correctamente.');
+    })
+    .catch(err => {
+        console.error('No se pudo conectar a la base de datos:', err);
+    });
 
 // Ruta para buscar canciones
 app.get('/search', (req, res) => {
@@ -52,7 +99,6 @@ app.get('/search', (req, res) => {
     apiReq.end();
 });
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Función para obtener detalles del álbum desde Deezer
 const fetchAlbumDetails = (albumId) => {
     return new Promise((resolve, reject) => {
@@ -101,7 +147,7 @@ app.get('/album/:id', async (req, res) => {
     }
 });
 
-// Función para buscar álbumes por nombre
+// Ruta para buscar álbumes por nombre
 const fetchAlbum = (albumName) => {
     return new Promise((resolve, reject) => {
         const options = {
@@ -154,8 +200,6 @@ app.get('/search/album', async (req, res) => {
     }
 });
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Ruta para obtener información de un artista
 app.get('/artist/:id', async (req, res) => {
     const artistId = req.params.id;
@@ -201,57 +245,14 @@ app.get('/artist/:id', async (req, res) => {
     }
 });
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Endpoint para buscar canciones
-app.get('/search', async (req, res) => {
-    const query = req.query.q;
-    
-    try {
-        // Buscar canciones usando la API de Deezer
-        const response = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`);
-        const data = await response.json();
-        
-        if (data.data && data.data.length > 0) {
-            const tracks = await Promise.all(data.data.map(async (item) => {
-                if (item.type === 'track') {
-                    // Obtener el género del artista
-                    const artistResponse = await fetch(`https://api.deezer.com/artist/${item.artist.id}`);
-                    const artistData = await artistResponse.json();
-                    
-                    // Preparar la respuesta
-                    return {
-                        title: item.title,
-                        artist: {
-                            name: item.artist.name,
-                            id: item.artist.id,
-                            genre: artistData.genres.data.length > 0 ? artistData.genres.data[0].name : 'Desconocido'
-                        },
-                        preview: item.preview
-                    };
-                }
-            }));
-            
-            // Filtrar solo los resultados de tipo track
-            const filteredTracks = tracks.filter(track => track);
-            res.json({ data: filteredTracks });
-        } else {
-            res.json({ data: [] });
-        }
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Error al buscar canciones.' });
-    }
-});
-
-// Endpoint para obtener información de un género
+// Ruta para obtener información de un género
 app.get('/genre/:id', async (req, res) => {
     const genreId = req.params.id;
 
     try {
         const response = await fetch(`https://api.deezer.com/genre/${genreId}`);
         const genreData = await response.json();
-        
+
         if (genreData) {
             res.json(genreData);
         } else {
@@ -263,6 +264,83 @@ app.get('/genre/:id', async (req, res) => {
     }
 });
 
+
+
+
+
+
+
+
+
+// para la base de datos de MySQL 
+app.post('/api/registro', async (req, res) => {
+    const { nombre1, nombre2, apellido1, apellido2, correo, contraseña } = req.body;
+
+    // Validaciones en el backend
+    if (!nombre1 || !nombre2 || !apellido1 || !apellido2 || !correo || !contraseña) {
+        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    }
+
+    try {
+        const nuevoUsuario = await registro.create({
+            nombre1,
+            nombre2,
+            apellido1,
+            apellido2,
+            correo,
+            contraseña
+        });
+        res.status(201).json({ message: 'Usuario registrado con éxito', data: nuevoUsuario });
+    } catch (error) {
+        console.error('Error al registrar el usuario:', error); // Añadido para depuración
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            res.status(400).json({ error: 'El correo ya está registrado' });
+        } else {
+            res.status(500).json({ error: 'Error al registrar el usuario' });
+        }
+    }
+});
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//este es el de iniciar sesion
+// Ruta para iniciar sesión
+// Ruta para agregar datos a la tabla 'iniciars'
+// Ruta para iniciar sesión
+// Ruta para iniciar sesión
+app.post('/api/iniciar', async (req, res) => {
+    const { usuario, contraseña } = req.body;
+
+    // Verificar que se hayan proporcionado los campos requeridos
+    if (!usuario || !contraseña) {
+        return res.status(400).json({ error: 'Faltan campos requeridos' });
+    }
+
+    try {
+        // Buscar el usuario en la base de datos
+        const user = await registro.findOne({
+            where: {
+                nombre1: usuario,
+                contraseña: contraseña // Verificar la contraseña tal como está almacenada
+            }
+        });
+
+        if (!user) {
+            return res.status(401).json({ error: 'Credenciales incorrectas' });
+        }
+
+        // Si las credenciales son correctas
+        res.json({ message: 'Inicio de sesión exitoso' });
+        // Aquí puedes redirigir al usuario a otra página o hacer otras acciones necesarias
+
+    } catch (error) {
+        console.error('Error al realizar la consulta:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Manejo de rutas no encontradas
+app.use((req, res) => {
+    res.status(404).send('Ruta no encontrada');
+});
 // Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -16,10 +16,6 @@
             background-position: center;
             animation: moverFondo 10s linear infinite; /* Animación de fondo */
         }
-
-       
-
-        
     </style>
 </head>
 <body>
@@ -29,17 +25,48 @@
         </div>
         <div class="right-section">
             <h2>Registro</h2>
-            <form action="inici.html" method="get">
-                <input type="text" placeholder="Nombre 1" required>
-                <input type="text" placeholder="Nombre 2" required>
-                <input type="text" placeholder="Apellido 1" required>
-                <input type="text" placeholder="Apellido 2" required>
-                <input type="email" placeholder="Correo@gmail.com" required>
-                <input type="password" placeholder="Contraseña" required>
+            <form id="registroForm">
+                <input type="text" name="nombre1" placeholder="Usuario" required>
+                <input type="text" name="nombre2" placeholder="Nombre 2" required>
+                <input type="text" name="apellido1" placeholder="Apellido 1" required>
+                <input type="text" name="apellido2" placeholder="Apellido 2" required>
+                <input type="email" name="correo" placeholder="Correo" required>
+                <input type="password" name="contraseña" placeholder="Contraseña" required>
                 <button type="submit">Registrar</button>
             </form>
-            <p>¿Ya tienes cuenta? <a href="#">Iniciar sesión</a></p>
+            
+            <p>¿Ya tienes cuenta? <a href="inici.html">Iniciar sesión</a></p>
         </div>
     </div>
+    
+    <script>
+        document.getElementById('registroForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evitar el envío del formulario por defecto
+    
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+    
+            try {
+                const response = await fetch('http://localhost:3000/api/registro', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+    
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Si el registro es exitoso, redirige a inici.html
+                    window.location.href = 'iniciar.html';
+                } else {
+                    console.error(result.error || 'Error en el registro');
+                }
+            } catch (error) {
+                console.error('Error al registrar:', error);
+            }
+        });
+    </script>
 </body>
 </html>

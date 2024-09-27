@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../public/Styless.css/inic.css"> <!-- Asegúrate de que esta ruta sea correcta -->
+    <title>Iniciar Sesión</title>
+    <link rel="icon" href="../img/inicioro.jpg"> <!-- Icono en la pestaña -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            background-image: url('../img/inicioro.jpg'); /* Asegúrate de que la imagen está en esta ruta */
+            background-size: cover;
+            background-position: center;
+            animation: moverFondo 10s linear infinite; /* Animación de fondo */
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h1>Bienvenido</h1>
+            <form id="loginForm" method="POST" action="/api/iniciar">
+                <input type="text" id="nombre1" name="usuario" placeholder="Nombre de usuario" required>
+                <input type="password" id="contraseña" name="contraseña" placeholder="Contraseña" required>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+            
+            <script>
+                document.getElementById('loginForm').addEventListener('submit', async (event) => {
+                    event.preventDefault(); // Evita que se recargue la página
+                    
+                    const nombre1 = document.getElementById('nombre1').value;
+                    const contraseña = document.getElementById('contraseña').value;
+            
+                    try {
+                        const response = await fetch('http://localhost:3000/api/iniciar', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ nombre1, contraseña }),
+});
+            
+                        const data = await response.json();
+                        if (response.ok) {
+                            console.log('Inicio de sesión exitoso:', data);
+                            // Aquí puedes redirigir a otra página si es necesario
+                            // window.location.href = '/otra-pagina'; // Descomenta y ajusta la URL según sea necesario
+                        } else {
+                            console.error('Error en inicio de sesión:', data);
+                            // Muestra el mensaje de error al usuario
+                            alert(data.mensaje || 'Error al iniciar sesión.');
+                        }
+                    } catch (error) {
+                        console.error('Error al realizar la solicitud:', error);
+                        alert('Error al realizar la solicitud. Intente de nuevo más tarde.');
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</body>
+</html>
