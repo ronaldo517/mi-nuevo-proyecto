@@ -14,16 +14,17 @@
         </header>
         <nav>
             <ul>
+                
                 <li><a href="menu.html">Volver a la búsqueda</a></li>
-                <li><a href="#" id="album-link">Álbum</a></li>
+                <li><a href="album.html">Álbum</a></li>
                 <li><a href="artista.html">Artista-Género</a></li>
                 <li><a href="playlist.html">Playlist</a></li>
-                <li><a href="crud.html">CRUD</a></li>
+                <li><a href="crud.html">CRUD</a></li> <!-- Botón CRUD -->
             </ul>
         </nav>
         <main>
             <div class="search-bar">
-                <input type="text" id="search-input" placeholder="Buscar artista, álbum o canción">
+                <input type="text" id="search-input" placeholder="Buscar canción">
             </div>
 
             <h2>Resultados de búsqueda:</h2>
@@ -45,16 +46,23 @@
 
     <script>
         let debounceTimeout;
-        const playlist = [];
+        let playlist = [];
 
-        document.getElementById('album-link').addEventListener('click', function () {
-            const artistName = document.getElementById('search-input').value.trim();
-            if (artistName) {
-                window.location.href = `album.html?artistName=${encodeURIComponent(artistName)}`;
+        // Cargar playlist desde el localStorage al iniciar
+        window.onload = function() {
+            const storedPlaylist = JSON.parse(localStorage.getItem('playlist'));
+            if (storedPlaylist && Array.isArray(storedPlaylist)) {
+                playlist = storedPlaylist.filter(track => track && track.title && track.artist && track.preview);
+                updatePlaylist();
             } else {
-                alert('Por favor, ingrese un nombre de artista primero.');
+                playlist = [];
             }
-        });
+        };
+
+        // Guardar playlist en localStorage
+        function savePlaylist() {
+            localStorage.setItem('playlist', JSON.stringify(playlist));
+        }
 
         document.getElementById('search-input').addEventListener('input', () => {
             const query = document.getElementById('search-input').value.trim();
@@ -74,8 +82,8 @@
                         .then(data => {
                             resultsList.innerHTML = '';
 
-                            if (data.data && data.data.length > 0) {
-                                const tracks = data.data.filter(item => item.type === 'track').slice(0, 5);
+                            if (data.apiResults && data.apiResults.length > 0) {
+                                const tracks = data.apiResults.filter(item => item.type === 'track').slice(0, 5);
 
                                 tracks.forEach(item => {
                                     const trackContainer = document.createElement('div');
@@ -100,6 +108,7 @@
                                     saveButton.onclick = () => {
                                         playlist.push(item);
                                         updatePlaylist();
+                                        savePlaylist(); // Guardar en localStorage
                                     };
 
                                     trackContainer.appendChild(trackTitle);
@@ -125,21 +134,12 @@
             const playlistDiv = document.getElementById('playlist');
             playlistDiv.innerHTML = '';
 
-            if (playlist.length === 0) {
-                playlistDiv.innerHTML = '<p>No hay canciones en tu playlist.</p>';
-                return;
-            }
-
             playlist.forEach((track, index) => {
-                const trackItem = document.createElement('div');
-                trackItem.className = 'track-item';
+                const trackContainer = document.createElement('div');
+                trackContainer.className = 'track-container';
 
-                const trackTitle = document.createElement('p');
-                trackTitle.className = 'track-title';
+                const trackTitle = document.createElement('h3');
                 trackTitle.textContent = `${track.title} - ${track.artist.name}`;
-
-                const trackActions = document.createElement('div');
-                trackActions.className = 'track-actions';
 
                 const playButton = document.createElement('button');
                 playButton.className = 'play-button';
@@ -157,13 +157,13 @@
                 deleteButton.onclick = () => {
                     playlist.splice(index, 1);
                     updatePlaylist();
+                    savePlaylist(); // Actualizar localStorage
                 };
 
-                trackActions.appendChild(playButton);
-                trackActions.appendChild(deleteButton);
-                trackItem.appendChild(trackTitle);
-                trackItem.appendChild(trackActions);
-                playlistDiv.appendChild(trackItem);
+                trackContainer.appendChild(trackTitle);
+                trackContainer.appendChild(playButton);
+                trackContainer.appendChild(deleteButton);
+                playlistDiv.appendChild(trackContainer);
             });
         }
     </script>

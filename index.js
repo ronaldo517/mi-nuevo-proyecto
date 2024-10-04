@@ -2,14 +2,14 @@ import express from 'express';
 import https from 'https';
 import cors from 'cors';
 import sequelize from './db.js';  // Asegúrate de incluir la extensión .js
-import Album from './models/album.js';
-import Buscar from './models/buscar.js';
-import Playlis from './models/playlis.js';
+/*import Album from './models/album.js';*/
+/*import Playlis from './models/playlis.js';*/
 import Artista from './models/artista.js';  // Asegúrate de que el archivo existe
-import Genero from './models/genero.js';    // Asegúrate de que el archivo existe
+/*import Genero from './models/genero.js'; */   // Asegúrate de que el archivo existe
 import registro from './models/registro.js';    // Asegúrate de que el archivo existe
 import Iniciar from './models/iniciar.js';    // Asegúrate de que el archivo existe
 import bcrypt from 'bcrypt';
+import Search from './models/buscar.js';
 
 const app = express();
 const DEEZER_API_KEY = 'd9391bf815msh735c64ff4d70826p177f85jsn57913074c63a';
@@ -57,48 +57,83 @@ sequelize.authenticate()
     .catch(err => {
         console.error('No se pudo conectar a la base de datos:', err);
     });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Ruta para buscar canciones
-app.get('/search', (req, res) => {
+app.get('/search', async (req, res) => {
     const query = req.query.q || 'eminem';  // Parámetro de búsqueda
 
-    const options = {
-        method: 'GET',
-        hostname: 'deezerdevs-deezer.p.rapidapi.com',
-        port: 443,
-        path: `/search?q=${encodeURIComponent(query)}`,
-        headers: {
-            'x-rapidapi-key': DEEZER_API_KEY,
-            'x-rapidapi-host': 'deezerdevs-deezer.p.rapidapi.com'
-        }
-    };
-
-    const apiReq = https.request(options, (apiRes) => {
-        const chunks = [];
-
-        apiRes.on('data', (chunk) => {
-            chunks.push(chunk);
-        });
-
-        apiRes.on('end', () => {
-            const body = Buffer.concat(chunks).toString();
-            try {
-                res.json(JSON.parse(body));  // Enviar la respuesta al cliente
-            } catch (error) {
-                console.error('Error al parsear JSON:', error);
-                res.status(500).send('Error en la respuesta de Deezer');
+    try {
+        // Consulta a la API de Deezer
+        const options = {
+            method: 'GET',
+            hostname: 'deezerdevs-deezer.p.rapidapi.com',
+            port: 443,
+            path: `/search?q=${encodeURIComponent(query)}`,
+            headers: {
+                'x-rapidapi-key': DEEZER_API_KEY,
+                'x-rapidapi-host': 'deezerdevs-deezer.p.rapidapi.com'
             }
+        };
+
+        const deezerResponse = await new Promise((resolve, reject) => {
+            const apiReq = https.request(options, (apiRes) => {
+                const chunks = [];
+                apiRes.on('data', (chunk) => chunks.push(chunk));
+                apiRes.on('end', () => resolve(JSON.parse(Buffer.concat(chunks).toString())));
+            });
+            apiReq.on('error', reject);
+            apiReq.end();
         });
-    });
 
-    apiReq.on('error', (error) => {
-        console.error('Error al hacer la solicitud:', error);
-        res.status(500).send('Error en la búsqueda de Deezer');
-    });
+        if (deezerResponse.data && deezerResponse.data.length > 0) {
+            const songData = deezerResponse.data.map(song => ({
+                query,
+                title: song.title,
+                artistName: song.artist.name,
+                albumName: song.album ? song.album.title : null,
+                genreName: song.genre ? song.genre.name : null,
+                previewUrl: song.preview
+            }));
 
-    apiReq.end();
+            // Guarda los resultados en la base de datos
+            await Promise.all(songData.map(async (song) => {
+                try {
+                    const [result] = await Search.findOrCreate({
+                        where: {
+                            title: song.title,
+                            artistName: song.artistName,
+                            albumName: song.albumName,
+                        },
+                        defaults: {
+                            query: song.query,
+                            previewUrl: song.previewUrl
+                        }
+                    });
+                    return result;
+                } catch (err) {
+                    console.error(`Error al guardar la canción ${song.title}:`, err);
+                }
+            }));
+
+            // Recupera los resultados desde la base de datos
+            const savedSongs = await Search.findAll({
+                where: { query },
+                attributes: ['title', 'artistName', 'albumName', 'previewUrl']
+            });
+
+            // Enviar respuesta con los datos de la API y de la base de datos
+            res.json({ apiResults: deezerResponse.data, savedSongs });
+        } else {
+            res.status(404).json({ message: 'No se encontraron resultados para la búsqueda.' });
+        }
+    } catch (error) {
+        console.error('Error al buscar canciones:', error);
+        res.status(500).json({ message: 'Error en la búsqueda de Deezer' });
+    }
 });
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Función para obtener detalles del álbum desde Deezer
 const fetchAlbumDetails = (albumId) => {
     return new Promise((resolve, reject) => {
@@ -200,13 +235,14 @@ app.get('/search/album', async (req, res) => {
     }
 });
 
-// Ruta para obtener información de un artista
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 app.get('/artist/:id', async (req, res) => {
     const artistId = req.params.id;
 
     const options = {
         method: 'GET',
-        hostname: 'deezerdevs-deezer.p.rapidapi.com',
+        hostname: 'deezerdevs-deezer.p.rapidapi.com',  
         port: 443,
         path: `/artist/${artistId}`,
         headers: {
@@ -219,31 +255,60 @@ app.get('/artist/:id', async (req, res) => {
         const response = await new Promise((resolve, reject) => {
             https.request(options, (apiRes) => {
                 const chunks = [];
-
                 apiRes.on('data', (chunk) => {
                     chunks.push(chunk);
                 });
-
                 apiRes.on('end', () => {
                     const body = Buffer.concat(chunks).toString();
                     try {
                         const json = JSON.parse(body);
-                        console.log(json); // Aquí se imprime la respuesta del artista
                         resolve(json);
                     } catch (error) {
-                        reject(`Error parsing JSON: ${error.message}. Response: ${body}`);
+                        reject(`Error al parsear el JSON: ${error.message}. Respuesta: ${body}`);
                     }
                 });
             }).on('error', (e) => {
-                reject(`Problem with request: ${e.message}`);
+                reject(`Error en la petición: ${e.message}`);
             }).end();
         });
 
-        res.json(response);
+        const artistData = {
+            id: artistId,
+            nombre: response.name,
+            nacionalidad: response.country || 'No disponible',
+            seguidores: response.nb_fan || 0,
+            foto: response.picture_medium || null
+        };
+
+        const [artista, created] = await Artista.findOrCreate({
+            where: { id: artistId },
+            defaults: artistData
+        });
+
+        if (!created) {
+            await artista.update(artistData);
+        }
+
+        res.json({
+            message: created ? 'Artista creado en la base de datos' : 'Artista actualizado en la base de datos',
+            artist: {
+                id: artista.id,
+                nombre: artista.nombre,
+                nacionalidad: artista.nacionalidad,
+                seguidores: artista.seguidores,
+                foto: artista.foto
+            }
+        });
+
     } catch (error) {
+        console.error('Error al obtener la información del artista:', error);
         res.status(500).json({ error: 'Error al obtener la información del artista.' });
     }
 });
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 // Ruta para obtener información de un género
 app.get('/genre/:id', async (req, res) => {
@@ -302,15 +367,12 @@ app.post('/api/registro', async (req, res) => {
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //este es el de iniciar sesion
-// Ruta para iniciar sesión
-// Ruta para agregar datos a la tabla 'iniciars'
-// Ruta para iniciar sesión
-// Ruta para iniciar sesión
+
 app.post('/api/iniciar', async (req, res) => {
-    const { usuario, contraseña } = req.body;
+    const { nombre1, contraseña } = req.body;
 
     // Verificar que se hayan proporcionado los campos requeridos
-    if (!usuario || !contraseña) {
+    if (!nombre1 || !contraseña) {
         return res.status(400).json({ error: 'Faltan campos requeridos' });
     }
 
@@ -318,7 +380,7 @@ app.post('/api/iniciar', async (req, res) => {
         // Buscar el usuario en la base de datos
         const user = await registro.findOne({
             where: {
-                nombre1: usuario,
+                nombre1: nombre1,
                 contraseña: contraseña // Verificar la contraseña tal como está almacenada
             }
         });
@@ -341,6 +403,32 @@ app.post('/api/iniciar', async (req, res) => {
 app.use((req, res) => {
     res.status(404).send('Ruta no encontrada');
 });
+
+
+
+app.get('/buscarCancion/:titulo', async (req, res) => {
+    try {
+      const titulo = req.params.titulo;
+      const canciones = await Cancion.findAll({
+        where: {
+          titulo: {
+            [Sequelize.Op.like]: '%' + titulo + '%'
+          }
+        }
+      });
+  
+      if (canciones.length > 0) {
+        res.json(canciones);
+      } else {
+        res.status(404).send('No se encontraron canciones con ese título');
+      }
+    } catch (error) {
+      console.error('Error al buscar la canción:', error);
+      res.status(500).send('Error en el servidor');
+    }
+  });
+
+  
 // Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

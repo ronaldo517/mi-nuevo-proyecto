@@ -17,7 +17,6 @@
             background-position: center;
             animation: moverFondo 10s linear infinite; /* Animación de fondo */
         }
-        
     </style>
 </head>
 <body>
@@ -25,7 +24,7 @@
         <div class="form-container">
             <h1>Bienvenido</h1>
             <form id="loginForm" method="POST" action="/api/iniciar">
-                <input type="text" id="nombre1" name="usuario" placeholder="Nombre de usuario" required>
+                <input type="text" id="nombre1" name="nombre1" placeholder="Nombre de usuario" required> <!-- Cambiado 'usuario' a 'nombre1' -->
                 <input type="password" id="contraseña" name="contraseña" placeholder="Contraseña" required>
                 <button type="submit">Iniciar Sesión</button>
             </form>
@@ -36,25 +35,25 @@
                     
                     const nombre1 = document.getElementById('nombre1').value;
                     const contraseña = document.getElementById('contraseña').value;
-            
+
                     try {
                         const response = await fetch('http://localhost:3000/api/iniciar', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ nombre1, contraseña }),
-});
-            
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ nombre1, contraseña }),
+                        });
+                        
                         const data = await response.json();
                         if (response.ok) {
                             console.log('Inicio de sesión exitoso:', data);
-                            // Aquí puedes redirigir a otra página si es necesario
-                            // window.location.href = '/otra-pagina'; // Descomenta y ajusta la URL según sea necesario
+                            // Redirigir a menu.html
+                            window.location.href = 'menu.html'; // Cambia la URL si es necesario
                         } else {
                             console.error('Error en inicio de sesión:', data);
                             // Muestra el mensaje de error al usuario
-                            alert(data.mensaje || 'Error al iniciar sesión.');
+                            alert(data.error || 'Error al iniciar sesión.');
                         }
                     } catch (error) {
                         console.error('Error al realizar la solicitud:', error);

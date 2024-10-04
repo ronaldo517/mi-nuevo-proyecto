@@ -1,5 +1,5 @@
 // models/genero.js
-import { DataTypes } from 'sequelize';
+/*import { DataTypes } from 'sequelize';
 import sequelize from '../db.js';  // Asegúrate de incluir la extensión .js
 
 const Genero = sequelize.define('Genero', {
@@ -17,4 +17,4 @@ const Genero = sequelize.define('Genero', {
     timestamps: false // Cambia a true si deseas agregar columnas de tiempo (createdAt, updatedAt)
 });
 
-export default Genero;
+export default Genero; */

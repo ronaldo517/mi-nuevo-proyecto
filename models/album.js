@@ -1,5 +1,5 @@
 // models/Album.js
-import { DataTypes } from 'sequelize';
+/*import { DataTypes } from 'sequelize';
 import sequelize from '../db.js';
 
 const Album = sequelize.define('Album', {
@@ -19,7 +19,17 @@ const Album = sequelize.define('Album', {
     genreId: {
         type: DataTypes.INTEGER,
         allowNull: true,
-    }
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
 });
 
-export default Album;
+export default Album; */

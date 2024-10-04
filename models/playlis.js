@@ -1,5 +1,5 @@
 // models/Playlist.js
-import { DataTypes } from 'sequelize';
+/*import { DataTypes } from 'sequelize';
 import sequelize from '../db.js';
 
 const Playlist = sequelize.define('Playlist', {
@@ -14,4 +14,4 @@ const Playlist = sequelize.define('Playlist', {
     },
 });
 
-export default Playlist;
+export default Playlist;*/

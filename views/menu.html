@@ -16,9 +16,7 @@
             <ul>
                 <li><a href="#" id="album-link">Álbum</a></li>
                 <li><a href="artista.html">Artista-Genero</a></li>
-                <!--<li><a href="genero.html">Género</a></li>-->
                 <li><a href="index.html">Playlist</a></li>
-                
             </ul>
         </nav>
         <main>
@@ -50,7 +48,6 @@
         document.getElementById('album-link').addEventListener('click', function (event) {
             const artistName = document.getElementById('search-input').value.trim();
             if (artistName) {
-                // Redirige a la página del álbum con el nombre del artista en la URL
                 window.location.href = `album.html?artistName=${encodeURIComponent(artistName)}`;
             } else {
                 alert('Por favor, ingrese un nombre de artista primero.');
@@ -59,13 +56,12 @@
 
         document.getElementById('search-input').addEventListener('input', () => {
             const query = document.getElementById('search-input').value.trim();
+            const resultsList = document.getElementById('results-list');
+            const albumResults = document.getElementById('album-results');
 
             if (debounceTimeout) {
                 clearTimeout(debounceTimeout);
             }
-
-            const resultsList = document.getElementById('results-list');
-            const albumResults = document.getElementById('album-results');
 
             if (query) {
                 resultsList.innerHTML = '<p>Buscando canciones...</p>';
@@ -83,9 +79,8 @@
                         .then(data => {
                             resultsList.innerHTML = '';
 
-                            if (data.data && data.data.length > 0) {
-                                const tracks = data.data.filter(item => item.type === 'track').slice(0, 5);
-
+                            if (data.apiResults && data.apiResults.length > 0) {
+                                const tracks = data.apiResults.filter(item => item.type === 'track').slice(0, 8);
                                 tracks.forEach(item => {
                                     const trackContainer = document.createElement('div');
                                     trackContainer.className = 'track-container';
@@ -175,7 +170,6 @@
             const lastSearch = localStorage.getItem('lastSearch');
             if (lastSearch) {
                 document.getElementById('search-input').value = lastSearch;
-                // Puedes llamar a la función de búsqueda si deseas que se muestren resultados automáticamente
                 document.getElementById('search-input').dispatchEvent(new Event('input'));
             }
         });

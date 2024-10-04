@@ -29,7 +29,7 @@ const Search = sequelize.define('Search', {
         allowNull: true,
     },
     previewUrl: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true,
     },
 }, {
