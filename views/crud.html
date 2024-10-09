@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD de Música</title>
-    <link rel="stylesheet" href="../public/Styless.css/crud.css"> <!-- Asegúrate de tener este archivo CSS -->
+    <link rel="stylesheet" href="../public/Styless.css/crud.css">
+    <style>
+        .selected {
+            background-color: rgb(0, 68, 255); /* Color azul para la fila seleccionada */
+            color: white; /* Cambiar el texto a blanco para mejor contraste */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -19,28 +25,39 @@
 
         <div id="formContainer" class="form-container" style="display: none;">
             <form id="crudForm">
-                <input type="hidden" id="musicId">
-                <label for="artist">Artista:</label>
-                <input type="text" id="artist" placeholder="Nombre del Artista" required>
+                <label for="musicId">ID:</label>
+                <input type="text" id="musicId" placeholder="ID del Registro" readonly>
 
-                <label for="genre">Género:</label>
-                <input type="text" id="genre" placeholder="Género Musical" required>
+                <label for="query">Consulta:</label>
+                <input type="text" id="query" placeholder="Consulta" required>
 
-                <label for="year">Año:</label>
-                <input type="date" id="year" required>
+                <label for="title">Título:</label>
+                <input type="text" id="title" placeholder="Título de la Canción" required>
+
+                <label for="artistName">Artista:</label>
+                <input type="text" id="artistName" placeholder="Nombre del Artista" required>
+
+                <label for="albumName">Álbum:</label>
+                <input type="text" id="albumName" placeholder="Nombre del Álbum" required>
+
+                <label for="genreName">Género:</label>
+                <input type="text" id="genreName" placeholder="Género Musical" >
+
+                <label for="previewUrl">URL de Vista Previa:</label>
+                <input type="text" id="previewUrl" placeholder="URL de Vista Previa" required>
 
                 <button type="submit">Guardar Cambios</button>
             </form>
         </div>
 
-        <div id="message"></div> <!-- Para mostrar mensajes al usuario -->
+        <div id="message" style="display: none;"></div>
 
-        <!-- Tabla para mostrar los datos -->
         <h2>Resultados de Búsqueda</h2>
         <table id="resultsTable">
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Consulta</th>
                     <th>Título</th>
                     <th>Artista</th>
                     <th>Álbum</th>
@@ -54,25 +71,54 @@
                 <!-- Los resultados se llenarán aquí -->
             </tbody>
         </table>
+
+        <h2>Historial de Acciones</h2>
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th>Acción</th>
+                    <th>ID</th>
+                    <th>Consulta</th>
+                    <th>Título</th>
+                    <th>Artista</th>
+                    <th>Álbum</th>
+                    <th>Género</th>
+                    <th>URL de Vista Previa</th>
+                    <th>Fecha de Creación</th>
+                    <th>Fecha de Actualización</th>
+                    <th>Fecha de Acción</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <!-- El historial se llenará aquí -->
+            </tbody>
+        </table>
     </div>
 
     <script>
-        // Función para cargar los datos de la base de datos
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+            messageDiv.style.color = isError ? 'red' : 'green';
+
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
         function loadData() {
             fetch('http://localhost:3000/api/searches')
-                .then(response => {
-                    if (!response.ok) throw new Error('Error al cargar los datos.');
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     const resultsBody = document.getElementById('resultsBody');
-                    resultsBody.innerHTML = ''; // Limpiar la tabla
+                    resultsBody.innerHTML = '';
 
-                    // Llenar la tabla con los datos
                     data.forEach(item => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${item.id}</td>
+                            <td>${item.query}</td>
                             <td>${item.title}</td>
                             <td>${item.artistName}</td>
                             <td>${item.albumName}</td>
@@ -81,106 +127,162 @@
                             <td>${new Date(item.createdAt).toLocaleString()}</td>
                             <td>${new Date(item.updatedAt).toLocaleString()}</td>
                         `;
+                        row.addEventListener('click', () => {
+                            selectRow(row, item); // Seleccionar la fila
+                        });
                         resultsBody.appendChild(row);
                     });
                 })
                 .catch(error => {
-                    document.getElementById('message').textContent = error.message;
+                    showMessage('Error al cargar los datos: ' + error.message, true);
                 });
         }
 
-        // Cargar los datos cuando la página se carga
         window.onload = loadData;
 
-        // Crear nuevo registro
+        function selectRow(row, item) {
+            // Quitar la selección de filas anteriores
+            const selectedRows = document.querySelectorAll('#resultsBody tr.selected');
+            selectedRows.forEach(selectedRow => {
+                selectedRow.classList.remove('selected');
+            });
+
+            // Marcar la fila seleccionada
+            row.classList.add('selected');
+
+            // Rellenar el formulario con los datos de la fila seleccionada
+            document.getElementById('musicId').value = item.id;
+            document.getElementById('query').value = item.query;
+            document.getElementById('title').value = item.title;
+            document.getElementById('artistName').value = item.artistName;
+            document.getElementById('albumName').value = item.albumName;
+            document.getElementById('genreName').value = item.genreName;
+            document.getElementById('previewUrl').value = item.previewUrl;
+
+            document.getElementById('formContainer').style.display = 'block';
+            document.getElementById('musicId').readOnly = true; // Solo lectura
+        }
+
+        function logAction(action, item) {
+            const historyBody = document.getElementById('historyBody');
+            const row = document.createElement('tr');
+            const date = new Date().toLocaleString();
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${item.id}</td>
+                <td>${item.query}</td>
+                <td>${item.title}</td>
+                <td>${item.artistName}</td>
+                <td>${item.albumName}</td>
+                <td>${item.genreName}</td>
+                <td><a href="${item.previewUrl}" target="_blank">Vista Previa</a></td>
+                <td>${new Date(item.createdAt).toLocaleString()}</td>
+                <td>${new Date(item.updatedAt).toLocaleString()}</td>
+                <td>${date}</td>
+            `;
+            historyBody.appendChild(row);
+        }
+
         document.getElementById('createButton').onclick = function() {
-            document.getElementById('musicId').value = ''; // Limpia el ID
-            document.getElementById('artist').value = '';
-            document.getElementById('genre').value = '';
-            document.getElementById('year').value = '';
-            document.getElementById('formContainer').style.display = 'block'; // Mostrar el formulario
+            document.getElementById('formContainer').style.display = 'block';
+            document.getElementById('musicId').value = ''; // Limpiar ID
+            document.getElementById('musicId').readOnly = true; // Hacer ID solo lectura
+            document.getElementById('crudForm').reset(); // Resetear el formulario
         };
 
-        // Enviar el formulario para crear o actualizar
+        document.getElementById('deleteButton').onclick = function() {
+            const selectedRow = document.querySelector('#resultsBody tr.selected');
+            if (selectedRow) {
+                const id = selectedRow.querySelector('td').textContent;
+
+                fetch(`http://localhost:3000/api/searches/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al eliminar el registro.');
+                    showMessage('Registro eliminado correctamente.');
+
+                    const deletedItem = {
+                        id: id,
+                        query: selectedRow.querySelector('td:nth-child(2)').textContent,
+                        title: selectedRow.querySelector('td:nth-child(3)').textContent,
+                        artistName: selectedRow.querySelector('td:nth-child(4)').textContent,
+                        albumName: selectedRow.querySelector('td:nth-child(5)').textContent,
+                        genreName: selectedRow.querySelector('td:nth-child(6)').textContent,
+                        previewUrl: selectedRow.querySelector('td:nth-child(7) a').href,
+                        createdAt: selectedRow.querySelector('td:nth-child(8)').textContent,
+                        updatedAt: selectedRow.querySelector('td:nth-child(9)').textContent,
+                    };
+
+                    logAction('Eliminación', deletedItem); // Log de acción
+                    loadData();
+                })
+                .catch(error => {
+                    showMessage('Error al eliminar: ' + error.message, true);
+                });
+            } else {
+                showMessage('Seleccione una fila para eliminar.', true);
+            }
+        };
+
+        document.getElementById('exitButton').onclick = function() {
+            window.location.href = 'menu.html';
+        };
+
         document.getElementById('crudForm').onsubmit = function(event) {
-            event.preventDefault(); // Evitar recargar la página
+            event.preventDefault();
 
             const id = document.getElementById('musicId').value;
-            const artist = document.getElementById('artist').value;
-            const genre = document.getElementById('genre').value;
-            const year = document.getElementById('year').value;
-            const method = id ? 'PUT' : 'POST'; // Si hay ID, es actualización; si no, es creación
-            const url = id ? `http://localhost:3000/api/music/${id}` : 'http://localhost:3000/api/music';
+            const formData = getFormData();
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `http://localhost:3000/api/searches/${id}` : 'http://localhost:3000/api/searches';
 
             fetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    artistName: artist,
-                    genre: genre,
-                    releaseYear: year
-                })
+                body: JSON.stringify(formData)
             })
             .then(response => {
-                if (!response.ok) throw new Error('Error al guardar los cambios.');
+                if (!response.ok) {
+                    throw new Error('No se encontró el registro con la ID proporcionada.');
+                }
                 return response.json();
             })
             .then(data => {
-                document.getElementById('message').textContent = 'Cambios guardados con éxito.';
+                const successMessage = id ? 'Registro modificado correctamente.' : 'Registro creado correctamente.';
+                showMessage(successMessage);
+                loadData();
                 document.getElementById('formContainer').style.display = 'none';
-                loadData(); // Volver a cargar los datos después de guardar cambios
+                document.getElementById('crudForm').reset();
+                
+                // Log de acción
+                logAction(id ? 'Modificación' : 'Creación', data);
             })
             .catch(error => {
-                document.getElementById('message').textContent = error.message;
+                showMessage('Error: ' + error.message, true);
             });
         };
 
-        // Modificar registro
-        document.getElementById('updateButton').onclick = function() {
-            const id = prompt('Introduce el ID del registro que deseas modificar:');
-            if (id) {
-                fetch(`http://localhost:3000/api/music/${id}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Registro no encontrado.');
-                        return response.json();
-                    })
-                    .then(data => {
-                        document.getElementById('musicId').value = data.id;
-                        document.getElementById('artist').value = data.artistName;
-                        document.getElementById('genre').value = data.genre;
-                        document.getElementById('year').value = data.releaseYear;
-                        document.getElementById('formContainer').style.display = 'block';
-                    })
-                    .catch(error => {
-                        document.getElementById('message').textContent = error.message;
-                    });
-            }
-        };
+        function getFormData() {
+            const data = {};
+            const query = document.getElementById('query').value;
+            const title = document.getElementById('title').value;
+            const artistName = document.getElementById('artistName').value;
+            const albumName = document.getElementById('albumName').value;
+            const genreName = document.getElementById('genreName').value;
+            const previewUrl = document.getElementById('previewUrl').value;
 
-        // Eliminar registro
-        document.getElementById('deleteButton').onclick = function() {
-            const id = prompt('Introduce el ID del registro que deseas eliminar:');
-            if (id) {
-                fetch(`http://localhost:3000/api/music/${id}`, {
-                    method: 'DELETE',
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Error al eliminar el registro.');
-                    document.getElementById('message').textContent = 'Registro eliminado con éxito.';
-                    loadData(); // Volver a cargar los datos después de eliminar
-                })
-                .catch(error => {
-                    document.getElementById('message').textContent = error.message;
-                });
-            }
-        };
+            if (query) data.query = query;
+            if (title) data.title = title;
+            if (artistName) data.artistName = artistName;
+            if (albumName) data.albumName = albumName;
+            if (genreName) data.genreName = genreName;
+            if (previewUrl) data.previewUrl = previewUrl;
 
-        // Salir
-        document.getElementById('exitButton').onclick = function() {
-            window.location.href = 'index.html'; // Redirigir a la página principal
-        };
+            return data;
+        }
     </script>
 </body>
 </html>

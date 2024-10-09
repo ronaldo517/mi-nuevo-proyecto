@@ -133,6 +133,57 @@ app.get('/search', async (req, res) => {
     }
 });
 
+// Ruta para obtener todas las búsquedas
+app.get('/api/searches', async (req, res) => {
+    try {
+        const searches = await Search.findAll();
+        res.json(searches);
+    } catch (error) {
+        console.error('Error al obtener las búsquedas:', error);
+        res.status(500).json({ message: 'Error al obtener las búsquedas' });
+    }
+});
+
+// Ruta para crear una nueva búsqueda
+app.post('/api/searches', async (req, res) => {
+    try {
+        const newSearch = await Search.create(req.body);
+        res.status(201).json(newSearch);
+    } catch (error) {
+        console.error('Error al crear una nueva búsqueda:', error);
+        res.status(400).json({ message: 'Error al crear una nueva búsqueda' });
+    }
+});
+
+// Ruta para actualizar una búsqueda existente
+app.put('/api/searches/:id', async (req, res) => {
+    try {
+        const search = await Search.findByPk(req.params.id);
+        if (!search) {
+            return res.status(404).json({ message: 'Búsqueda no encontrada' });
+        }
+        await search.update(req.body);
+        res.json(search);
+    } catch (error) {
+        console.error('Error al actualizar la búsqueda:', error);
+        res.status(400).json({ message: 'Error al actualizar la búsqueda' });
+    }
+});
+
+// Ruta para eliminar una búsqueda
+app.delete('/api/searches/:id', async (req, res) => {
+    try {
+        const search = await Search.findByPk(req.params.id);
+        if (!search) {
+            return res.status(404).json({ message: 'Búsqueda no encontrada' });
+        }
+        await search.destroy();
+        res.status(204).send();
+    } catch (error) {
+        console.error('Error al eliminar la búsqueda:', error);
+        res.status(500).json({ message: 'Error al eliminar la búsqueda' });
+    }
+});
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Función para obtener detalles del álbum desde Deezer
 const fetchAlbumDetails = (albumId) => {
